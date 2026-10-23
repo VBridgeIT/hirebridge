@@ -1,0 +1,8 @@
+/assets/*
+  X-Content-Type-Options: nosniff
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: public, max-age=3600
+
+/*
+  X-Robots-Tag: noindex, nofollow
+  X-Frame-Options: DENY
