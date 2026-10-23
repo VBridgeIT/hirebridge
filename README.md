@@ -19,13 +19,14 @@ This is VBridgeIT's internal tracker for H-1B employees: their LCAs, H-1B approv
 
 ## How it is built
 
-- **Cloudflare Pages Functions** render plain HTML pages. There is no JavaScript in the browser and no build step.
+- A **Cloudflare Worker** renders plain HTML pages. There is no JavaScript in the browser and no build step. Pushes to `main` deploy the live site; other branches get a Preview link with their own database (`wrangler.jsonc`).
 - **Cloudflare D1** (SQLite) stores the data. The app applies its own schema changes, which live in `src/db.js`.
-- **Cloudflare Access** handles sign-in with one-time email codes. The app also verifies the Access token and checks an allow-list of HR emails (`src/auth.js`).
+- **Cloudflare Access** handles sign-in with one-time email codes. The app reads the identity Access passes to the Worker (or verifies the Access token) and checks its own allow-list of HR emails (`src/auth.js`).
 - Every add, edit and delete is written to `audit_log` in the same transaction as the change. Edits use a version check, so two people editing the same record cannot overwrite each other.
 
 ```
-functions/[[path]].js   entry point (all routes except /assets)
+wrangler.jsonc          Worker settings: databases for live and preview
+src/worker.js           entry point (everything except files in public/)
 src/app.js              routing and page handlers
 src/auth.js             Access token check and allow-list
 src/db.js               schema, migrations, queries, audit log
@@ -43,8 +44,9 @@ tests/e2e/              Playwright end-to-end checks
 You need Node 20 or later, and Python 3 with Playwright for the end-to-end checks.
 
 ```bash
+npm install
 cp .dev.vars.example .dev.vars   # signs you in as hr@vbridgeit.com on localhost only
-npm run dev                      # http://localhost:8790
+npm run dev                      # http://localhost:8790 (local database)
 npm test                         # unit tests
 npm run test:e2e                 # starts a throwaway copy on :8791 with an empty database
 ```

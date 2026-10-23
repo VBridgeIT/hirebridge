@@ -4,8 +4,11 @@
   "description": "VBridgeIT H-1B Compliance Tracker (internal pilot, first slice of HireBridge)",
   "type": "module",
   "scripts": {
-    "dev": "npx wrangler@4 pages dev public --d1 DB=hirebridge-local --port 8790 --compatibility-date 2026-09-01",
+    "dev": "wrangler dev --port 8790",
     "test": "node --test tests/unit/*.test.js",
     "test:e2e": "bash tests/e2e/run.sh"
+  },
+  "devDependencies": {
+    "wrangler": "^4.152.0"
   }
 }

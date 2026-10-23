@@ -90,6 +90,6 @@ The tracker helps HR stay organized. It does not give legal advice. Our immigrat
 
 ## Technical notes
 
-- Hosting is Cloudflare Pages and Pages Functions, with a Cloudflare D1 (SQLite) database, on the free plan.
+- Hosting is a Cloudflare Worker with a Cloudflare D1 (SQLite) database, on the free plan. Preview links come from Cloudflare's Worker Previews.
 - Pages are server-rendered HTML forms. They work without JavaScript and need no build step.
 - The schema is plain SQL and can move to Postgres if this grows into the full HireBridge stack.

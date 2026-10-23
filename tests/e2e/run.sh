@@ -4,9 +4,8 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 PORT="${PORT:-8791}"
 STATE="$(mktemp -d)"
-npx wrangler@4 pages dev public --d1 DB=hirebridge-e2e --port "$PORT" --persist-to "$STATE" \
-  --compatibility-date 2026-09-01 \
-  --binding DEV_USER_EMAIL=hr@vbridgeit.com --binding ALLOWED_EMAILS=hr@vbridgeit.com --binding ALLOW_SAMPLE_DATA=1 \
+npx wrangler dev --port "$PORT" --persist-to "$STATE" \
+  --var DEV_USER_EMAIL:hr@vbridgeit.com --var ALLOWED_EMAILS:hr@vbridgeit.com --var ALLOW_SAMPLE_DATA:1 \
   > "$STATE/wrangler.log" 2>&1 &
 PID=$!
 trap 'kill $PID 2>/dev/null; rm -rf "$STATE"' EXIT

@@ -353,16 +353,16 @@ const ROUTES = [
   ['POST', /^\/sample$/, sampleData],
 ];
 
-export async function handle(request, env, { fetchImpl = fetch } = {}) {
+export async function handle(request, env, { fetchImpl = fetch, access } = {}) {
   const url = new URL(request.url);
   try {
     const missing = missingConfig(env, url);
     if (missing.length) {
       console.error('Missing settings:', missing.join(', '));
       return message(messagePage({ title: 'Not set up', heading: 'The tracker is not set up yet', status: 503,
-        text: html`<p>These settings are missing in Cloudflare Pages: ${missing.join(', ')}.</p><p>See SETUP.md in the repository.</p>` }));
+        text: html`<p>These settings are missing in the Cloudflare Worker: ${missing.join(', ')}.</p><p>See SETUP.md in the repository.</p>` }));
     }
-    const auth = await authenticate(request, env, { fetchImpl });
+    const auth = await authenticate(request, env, { fetchImpl, access });
     if (!auth.email) {
       if (auth.detail) console.warn('Access token rejected:', auth.detail);
       return message(auth.status === 403

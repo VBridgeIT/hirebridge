@@ -1,0 +1,24 @@
+{
+  // Cloudflare Worker settings for the H-1B Tracker. This file is the source of truth:
+  // Workers Builds deploys main with `wrangler deploy` and every other branch with `wrangler preview`.
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "hirebridge",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": true,
+  "assets": { "directory": "./public" },
+  "observability": { "enabled": true },
+
+  // Live data
+  "d1_databases": [
+    { "binding": "DB", "database_name": "hirebridge", "database_id": "PRODUCTION_DATABASE_ID" }
+  ],
+
+  // Preview links (one per branch / pull request): separate database, sample data allowed
+  "previews": {
+    "vars": { "ALLOW_SAMPLE_DATA": "1" },
+    "d1_databases": [
+      { "binding": "DB", "database_name": "hirebridge-preview", "database_id": "PREVIEW_DATABASE_ID" }
+    ]
+  }
+}
