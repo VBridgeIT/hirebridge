@@ -6,6 +6,8 @@
   "main": "src/worker.js",
   "compatibility_date": "2026-09-01",
   "workers_dev": true,
+  // Serve Preview links at <preview>-hirebridge.<subdomain>.workers.dev (off by default since Wrangler 4.34)
+  "preview_urls": true,
   "assets": { "directory": "./public" },
   "observability": { "enabled": true },
 
