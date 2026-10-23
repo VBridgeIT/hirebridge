@@ -12,7 +12,8 @@
   "observability": { "enabled": true },
 
   // HR users allowed into the app (a second lock behind Cloudflare Access). Change by pull request.
-  "vars": { "HR_EMAILS": "hr@vbridgeit.com,ravitej@vbridgeit.com" },
+  // ACCESS_TEAM_DOMAIN + ACCESS_AUD let the app verify the Access sign-in token (neither is a secret).
+  "vars": { "HR_EMAILS": "hr@vbridgeit.com,ravitej@vbridgeit.com", "ACCESS_TEAM_DOMAIN": "quiet-hill-a576.cloudflareaccess.com" },
 
   // Live data
   "d1_databases": [
@@ -21,7 +22,7 @@
 
   // Preview links (one per branch / pull request): separate database, sample data allowed
   "previews": {
-    "vars": { "HR_EMAILS": "hr@vbridgeit.com,ravitej@vbridgeit.com", "ALLOW_SAMPLE_DATA": "1" },
+    "vars": { "HR_EMAILS": "hr@vbridgeit.com,ravitej@vbridgeit.com", "ACCESS_TEAM_DOMAIN": "quiet-hill-a576.cloudflareaccess.com", "ALLOW_SAMPLE_DATA": "1" },
     "d1_databases": [
       { "binding": "DB", "database_name": "hirebridge-preview", "database_id": "118412c9-6465-4717-bb18-f2d1a96ffddf" }
     ]
