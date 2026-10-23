@@ -70,5 +70,28 @@ test('the local sign-in shortcut only works on localhost', async () => {
 test('missing settings are reported, and an empty allow-list closes the app', () => {
   const url = new URL('https://hirebridge.pages.dev/');
   assert.deepEqual(missingConfig(prodEnv, url), []);
-  assert.deepEqual(missingConfig({}, url), ['DB (D1 database binding)', 'ALLOWED_EMAILS', 'ACCESS_TEAM_DOMAIN', 'ACCESS_AUD']);
+  assert.deepEqual(missingConfig({}, url), ['DB (D1 database binding)', 'HR_EMAILS (list of HR emails)']);
+});
+
+test('Worker-level Access identity (ctx.access) is used when present', async () => {
+  const env = { DB: {}, ALLOWED_EMAILS: 'hr@vbridgeit.com' };
+  const access = (email, aud = 'worker-aud') => ({ aud, getIdentity: async () => ({ email }) });
+  const req = new Request('https://hirebridge.example.workers.dev/employees');
+  assert.deepEqual(await authenticate(req, env, { access: access('HR@vbridgeit.com') }), { email: 'hr@vbridgeit.com' });
+  assert.equal((await authenticate(req, env, { access: access('x@gmail.com') })).status, 403);
+  assert.equal((await authenticate(req, { ...env, ACCESS_AUD: 'other' }, { access: access('hr@vbridgeit.com') })).status, 401);
+  assert.equal((await authenticate(req, env, { access: { aud: 'a', getIdentity: async () => ({}) } })).status, 401);
+  // No ctx.access, no token: refused. A token without Access settings: refused.
+  assert.equal((await authenticate(req, env, {})).status, 401);
+  const withToken = new Request(req.url, { headers: { 'Cf-Access-Jwt-Assertion': await sign(good) } });
+  assert.equal((await authenticate(withToken, env, { fetchImpl })).status, 401);
+});
+
+test('HR_EMAILS from the config and ALLOWED_EMAILS secret are combined', async () => {
+  const access = (email) => ({ aud: 'a', getIdentity: async () => ({ email }) });
+  const req = new Request('https://hirebridge.example.workers.dev/');
+  const env = { DB: {}, HR_EMAILS: 'hr@vbridgeit.com', ALLOWED_EMAILS: 'ravitej@vbridgeit.com' };
+  assert.equal((await authenticate(req, env, { access: access('hr@vbridgeit.com') })).email, 'hr@vbridgeit.com');
+  assert.equal((await authenticate(req, env, { access: access('ravitej@vbridgeit.com') })).email, 'ravitej@vbridgeit.com');
+  assert.equal((await authenticate(req, env, { access: access('recruiter@vbridgeit.com') })).status, 403);
 });

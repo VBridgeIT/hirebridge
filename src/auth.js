@@ -69,18 +69,20 @@ export async function verifyAccessJwt(token, { teamDomain, aud, fetchImpl = fetc
   return String(payload.email).toLowerCase();
 }
 
+// HR users who may use the app. HR_EMAILS comes from wrangler.jsonc (so every deploy and Preview has it);
+// ALLOWED_EMAILS can also be set as a dashboard secret. Both lists are combined.
 export function allowedEmails(env) {
-  return new Set(String(env.ALLOWED_EMAILS || '').split(/[,\s]+/).map((s) => s.trim().toLowerCase()).filter(Boolean));
+  const raw = `${env.HR_EMAILS || ''},${env.ALLOWED_EMAILS || ''}`;
+  return new Set(raw.split(/[,\s]+/).map((s) => s.trim().toLowerCase()).filter(Boolean));
 }
 
+// ACCESS_TEAM_DOMAIN and ACCESS_AUD are only needed when Access is set up as a separate Zero Trust
+// application (the token check). With Access switched on from the Worker's own Access tab, Cloudflare
+// hands the signed-in identity to the Worker directly (ctx.access) and those two are optional.
 export function missingConfig(env, url) {
   const missing = [];
   if (!env.DB) missing.push('DB (D1 database binding)');
-  if (!allowedEmails(env).size) missing.push('ALLOWED_EMAILS');
-  if (!isLocalDev(env, url)) {
-    if (!env.ACCESS_TEAM_DOMAIN) missing.push('ACCESS_TEAM_DOMAIN');
-    if (!env.ACCESS_AUD) missing.push('ACCESS_AUD');
-  }
+  if (!allowedEmails(env).size) missing.push('HR_EMAILS (list of HR emails)');
   return missing;
 }
 
@@ -90,14 +92,26 @@ export function isLocalDev(env, url) {
 }
 
 // Returns { email } for an allowed user, or { status, reason } when access is refused.
-export async function authenticate(request, env, { fetchImpl = fetch } = {}) {
+// `access` is the Workers runtime's ctx.access: set by Cloudflare (never by the visitor) only when
+// Access has authenticated the request. Without it we fall back to verifying the Access token header.
+export async function authenticate(request, env, { fetchImpl = fetch, access } = {}) {
   const url = new URL(request.url);
   let email;
   if (isLocalDev(env, url)) {
     email = String(env.DEV_USER_EMAIL).toLowerCase();
+  } else if (access) {
+    if (env.ACCESS_AUD && access.aud !== env.ACCESS_AUD) return { status: 401, reason: 'bad-token', detail: 'Wrong audience' };
+    try {
+      const identity = await access.getIdentity();
+      email = identity && identity.email ? String(identity.email).toLowerCase() : null;
+    } catch (err) {
+      return { status: 401, reason: 'bad-token', detail: `Could not read Access identity: ${err.message}` };
+    }
+    if (!email) return { status: 401, reason: 'bad-token', detail: 'Access identity has no email' };
   } else {
     const token = request.headers.get('Cf-Access-Jwt-Assertion');
     if (!token) return { status: 401, reason: 'no-token' };
+    if (!env.ACCESS_TEAM_DOMAIN || !env.ACCESS_AUD) return { status: 401, reason: 'bad-token', detail: 'ACCESS_TEAM_DOMAIN and ACCESS_AUD are not set' };
     try {
       email = await verifyAccessJwt(token, { teamDomain: env.ACCESS_TEAM_DOMAIN, aud: env.ACCESS_AUD, fetchImpl });
     } catch (err) {

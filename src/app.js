@@ -353,23 +353,24 @@ const ROUTES = [
   ['POST', /^\/sample$/, sampleData],
 ];
 
-export async function handle(request, env, { fetchImpl = fetch } = {}) {
+export async function handle(request, env, { fetchImpl = fetch, access } = {}) {
   const url = new URL(request.url);
   try {
     const missing = missingConfig(env, url);
     if (missing.length) {
       console.error('Missing settings:', missing.join(', '));
       return message(messagePage({ title: 'Not set up', heading: 'The tracker is not set up yet', status: 503,
-        text: html`<p>These settings are missing in Cloudflare Pages: ${missing.join(', ')}.</p><p>See SETUP.md in the repository.</p>` }));
+        text: html`<p>These settings are missing in the Cloudflare Worker: ${missing.join(', ')}.</p><p>See SETUP.md in the repository.</p>` }));
     }
-    const auth = await authenticate(request, env, { fetchImpl });
+    const auth = await authenticate(request, env, { fetchImpl, access });
     if (!auth.email) {
       if (auth.detail) console.warn('Access token rejected:', auth.detail);
       return message(auth.status === 403
         ? messagePage({ title: 'No access', heading: 'You do not have access', status: 403,
           text: html`<p>You are signed in as ${auth.email}, but this address is not on the list of HR users. Ask RG to add you.</p><p><a href="/cdn-cgi/access/logout">Sign out</a></p>` })
         : messagePage({ title: 'Sign in', heading: 'Please sign in', status: 401,
-          text: html`<p>Your sign-in could not be confirmed. Open the tracker again to sign in with your work email.</p>` }));
+          text: html`<p>Your sign-in could not be confirmed. Open the tracker again to sign in with your work email.</p>
+            <p class="muted small">Reason code: ${auth.reason === 'no-token' ? 'no Cloudflare Access sign-in on this request' : `Cloudflare Access sign-in could not be checked (${auth.detail || 'unknown'})`}.</p>` }));
     }
     if (request.method === 'POST' && !sameOrigin(request, url)) {
       return message(messagePage({ title: 'Blocked', heading: 'That form could not be sent', status: 403, user: auth.email,
