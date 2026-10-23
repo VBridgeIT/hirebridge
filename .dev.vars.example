@@ -1,0 +1,5 @@
+# Local development only. Copy to .dev.vars (never commit .dev.vars).
+# DEV_USER_EMAIL signs you in automatically, but only on localhost.
+DEV_USER_EMAIL=hr@vbridgeit.com
+ALLOWED_EMAILS=hr@vbridgeit.com
+ALLOW_SAMPLE_DATA=1
