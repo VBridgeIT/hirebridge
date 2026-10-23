@@ -11,14 +11,14 @@
 
   // Live data
   "d1_databases": [
-    { "binding": "DB", "database_name": "hirebridge", "database_id": "PRODUCTION_DATABASE_ID" }
+    { "binding": "DB", "database_name": "hirebridge", "database_id": "3ab107cc-9536-462f-9c11-90e7c715db77" }
   ],
 
   // Preview links (one per branch / pull request): separate database, sample data allowed
   "previews": {
     "vars": { "ALLOW_SAMPLE_DATA": "1" },
     "d1_databases": [
-      { "binding": "DB", "database_name": "hirebridge-preview", "database_id": "PREVIEW_DATABASE_ID" }
+      { "binding": "DB", "database_name": "hirebridge-preview", "database_id": "118412c9-6465-4717-bb18-f2d1a96ffddf" }
     ]
   }
 }
