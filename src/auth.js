@@ -69,8 +69,11 @@ export async function verifyAccessJwt(token, { teamDomain, aud, fetchImpl = fetc
   return String(payload.email).toLowerCase();
 }
 
+// HR users who may use the app. HR_EMAILS comes from wrangler.jsonc (so every deploy and Preview has it);
+// ALLOWED_EMAILS can also be set as a dashboard secret. Both lists are combined.
 export function allowedEmails(env) {
-  return new Set(String(env.ALLOWED_EMAILS || '').split(/[,\s]+/).map((s) => s.trim().toLowerCase()).filter(Boolean));
+  const raw = `${env.HR_EMAILS || ''},${env.ALLOWED_EMAILS || ''}`;
+  return new Set(raw.split(/[,\s]+/).map((s) => s.trim().toLowerCase()).filter(Boolean));
 }
 
 // ACCESS_TEAM_DOMAIN and ACCESS_AUD are only needed when Access is set up as a separate Zero Trust
@@ -79,7 +82,7 @@ export function allowedEmails(env) {
 export function missingConfig(env, url) {
   const missing = [];
   if (!env.DB) missing.push('DB (D1 database binding)');
-  if (!allowedEmails(env).size) missing.push('ALLOWED_EMAILS');
+  if (!allowedEmails(env).size) missing.push('HR_EMAILS (list of HR emails)');
   return missing;
 }
 

@@ -42,17 +42,11 @@ The Worker is called **hirebridge** and is connected to `VBridgeIT/hirebridge`. 
 
 HR users sign in with a one-time code that Cloudflare emails them. If Zero Trust asks for a team name or plan the first time, pick a name such as `vbridgeit` and the **Free** plan. It needs a card on file but is not charged.
 
-## 4. Add the allowed emails
+## 4. The allowed emails (in the repo)
 
-The app keeps its own list of HR emails as a second lock. Someone must be on both this list and the Access policy to get in.
+The app keeps its own list of HR emails as a second lock. Someone must pass the Access policy **and** be on this list to get in, so a company email alone is not enough.
 
-In the Worker, go to **Settings → Variables and secrets** and add the setting below **twice**: once with **Production** selected next to the heading, and once with **Previews Base** selected.
-
-| Type | Name | Value |
-|---|---|---|
-| **Secret** | `ALLOWED_EMAILS` | The same emails as the Access policy, separated by commas |
-
-Choose **Secret**, not Text. Deploys replace text variables with what is in `wrangler.jsonc`, but they never touch secrets.
+The list is `HR_EMAILS` in `wrangler.jsonc`, set once for the live site and once under `previews`. To change it, edit both lines in a pull request; the change applies when it is deployed. You do not need to add anything in the dashboard. An `ALLOWED_EMAILS` secret, if one exists, is added to this list.
 
 ## 5. Check it
 
@@ -66,13 +60,13 @@ Choose **Secret**, not Text. Deploys replace text variables with what is in `wra
 Change both places:
 
 1. The Access policy (Worker → **Access** tab).
-2. `ALLOWED_EMAILS` under Production and Previews Base.
+2. `HR_EMAILS` in `wrangler.jsonc` (both lines), by pull request.
 
 ## If something goes wrong
 
 | What you see | What to check |
 |---|---|
-| "The tracker is not set up yet" | The page names what is missing. Usually `ALLOWED_EMAILS` has not been added for that environment |
+| "The tracker is not set up yet" | The page names what is missing |
 | "Please sign in" | Access is not turned on for this Worker (step 3) |
-| "You do not have access" | The email is in the Access policy but not in `ALLOWED_EMAILS` |
+| "You do not have access" | The email passes the Access policy but is not in `HR_EMAILS` |
 | Build failed | Open the build log under **Deployments**. Check that the database IDs in `wrangler.jsonc` are correct |

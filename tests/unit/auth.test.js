@@ -70,7 +70,7 @@ test('the local sign-in shortcut only works on localhost', async () => {
 test('missing settings are reported, and an empty allow-list closes the app', () => {
   const url = new URL('https://hirebridge.pages.dev/');
   assert.deepEqual(missingConfig(prodEnv, url), []);
-  assert.deepEqual(missingConfig({}, url), ['DB (D1 database binding)', 'ALLOWED_EMAILS']);
+  assert.deepEqual(missingConfig({}, url), ['DB (D1 database binding)', 'HR_EMAILS (list of HR emails)']);
 });
 
 test('Worker-level Access identity (ctx.access) is used when present', async () => {
@@ -85,4 +85,13 @@ test('Worker-level Access identity (ctx.access) is used when present', async () 
   assert.equal((await authenticate(req, env, {})).status, 401);
   const withToken = new Request(req.url, { headers: { 'Cf-Access-Jwt-Assertion': await sign(good) } });
   assert.equal((await authenticate(withToken, env, { fetchImpl })).status, 401);
+});
+
+test('HR_EMAILS from the config and ALLOWED_EMAILS secret are combined', async () => {
+  const access = (email) => ({ aud: 'a', getIdentity: async () => ({ email }) });
+  const req = new Request('https://hirebridge.example.workers.dev/');
+  const env = { DB: {}, HR_EMAILS: 'hr@vbridgeit.com', ALLOWED_EMAILS: 'ravitej@vbridgeit.com' };
+  assert.equal((await authenticate(req, env, { access: access('hr@vbridgeit.com') })).email, 'hr@vbridgeit.com');
+  assert.equal((await authenticate(req, env, { access: access('ravitej@vbridgeit.com') })).email, 'ravitej@vbridgeit.com');
+  assert.equal((await authenticate(req, env, { access: access('recruiter@vbridgeit.com') })).status, 403);
 });

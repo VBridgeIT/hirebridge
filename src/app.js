@@ -369,7 +369,8 @@ export async function handle(request, env, { fetchImpl = fetch, access } = {}) {
         ? messagePage({ title: 'No access', heading: 'You do not have access', status: 403,
           text: html`<p>You are signed in as ${auth.email}, but this address is not on the list of HR users. Ask RG to add you.</p><p><a href="/cdn-cgi/access/logout">Sign out</a></p>` })
         : messagePage({ title: 'Sign in', heading: 'Please sign in', status: 401,
-          text: html`<p>Your sign-in could not be confirmed. Open the tracker again to sign in with your work email.</p>` }));
+          text: html`<p>Your sign-in could not be confirmed. Open the tracker again to sign in with your work email.</p>
+            <p class="muted small">Reason code: ${auth.reason === 'no-token' ? 'no Cloudflare Access sign-in on this request' : 'Cloudflare Access sign-in could not be checked'}.</p>` }));
     }
     if (request.method === 'POST' && !sameOrigin(request, url)) {
       return message(messagePage({ title: 'Blocked', heading: 'That form could not be sent', status: 403, user: auth.email,
